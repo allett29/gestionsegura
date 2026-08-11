@@ -63,9 +63,10 @@ Esta app Laravel funciona con ambos; en Render usamos **pgsql**.
 | `QUEUE_CONNECTION` | `sync` |
 | `LOG_CHANNEL` | `stderr` |
 | `EJECUTAR_MIGRACIONES` | `true` |
-| `REST_COUNTRIES_API_KEY` | *(opcional; si no hay key se usa respaldo local ISO)* |
+| `REST_COUNTRIES_URL` | `https://api.restcountries.com/countries/v5` |
+| `REST_COUNTRIES_API_KEY` | *(tu API key de https://restcountries.com/sign-up)* |
 
-> **REST Countries:** la API pública v3 ya no devuelve datos. Sin `REST_COUNTRIES_API_KEY` la app usa un archivo local con ~249 países. Para datos en vivo, regístrate en https://restcountries.com/sign-up y pega tu key.
+> **REST Countries:** la API pública v3 ya no devuelve datos. Configura `REST_COUNTRIES_API_KEY` con tu key v5.
 
 > Alternativa más simple: si Render te da **Internal Database URL**, puedes poner solo:
 >

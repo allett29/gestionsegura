@@ -75,16 +75,18 @@ docker pull allett29/gestionsegura:latest
 
 Sigue `docs/DEPLOY_RENDER.md`. Resumen:
 
-1. Crear MySQL en Render
+1. Crear **PostgreSQL** en Render (plan free)
 2. New Web Service → conectar repo → Runtime Docker
 3. Variables mínimas:
    - `APP_KEY`
    - `APP_URL`
-   - `DB_CONNECTION=mysql`
+   - `DB_CONNECTION=pgsql`
    - `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
    - `SESSION_DRIVER=file`
    - `CACHE_STORE=file`
    - `EJECUTAR_MIGRACIONES=true`
+   - `REST_COUNTRIES_URL=https://api.restcountries.com/countries/v5`
+   - `REST_COUNTRIES_API_KEY` = tu key v5 de REST Countries
 4. Deploy
 5. (Opcional) Shell → `php artisan db:seed --force`
 

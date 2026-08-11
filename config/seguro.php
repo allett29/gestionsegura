@@ -51,7 +51,7 @@ return [
         'api_key' => env('REST_COUNTRIES_API_KEY', ''),
         'campos' => 'names.common,codes.alpha_2,region,subregion,flag.url_svg',
         'limite_pagina' => (int) env('REST_COUNTRIES_PAGE_LIMIT', 100),
-        'timeout_segundos' => (int) env('REST_COUNTRIES_TIMEOUT', 5),
+        'timeout_segundos' => (int) env('REST_COUNTRIES_TIMEOUT', 10),
         'cache_segundos' => (int) env('REST_COUNTRIES_CACHE', 86400),
         'clave_cache' => 'paises.todos.v2',
     ],

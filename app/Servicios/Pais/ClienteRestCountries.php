@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Cliente resiliente para REST Countries (v5 con API key; respaldo local si falla).
+ * Cliente para REST Countries v5 (requiere API key).
  */
 class ClienteRestCountries
 {
@@ -22,7 +22,7 @@ class ClienteRestCountries
     ) {}
 
     /**
-     * Obtiene la lista de países (caché → API v5 → archivo local).
+     * Obtiene la lista de países desde la API externa (con caché).
      *
      * @return Collection<int, DatosPais>
      */
@@ -49,17 +49,20 @@ class ClienteRestCountries
                     ->all();
             });
 
-            return $this->desdeArreglos($cacheados);
+            return collect($cacheados)->map(
+                fn (array $item) => new DatosPais(
+                    nombre: $item['nombre'],
+                    codigoIso: $item['codigo_iso'],
+                    region: $item['region'],
+                    urlBandera: $item['url_bandera'] ?? null,
+                )
+            );
+        } catch (ExcepcionServicioPaises $excepcion) {
+            throw $excepcion;
         } catch (Throwable $excepcion) {
-            Log::warning('Fallo al obtener países; se usa respaldo local.', [
+            Log::warning('Fallo al obtener países desde REST Countries.', [
                 'error' => $excepcion->getMessage(),
             ]);
-
-            $respaldo = $this->obtenerDesdeArchivoRespaldo();
-
-            if ($respaldo->isNotEmpty()) {
-                return $respaldo;
-            }
 
             throw new ExcepcionServicioPaises(
                 'El servicio de países no está disponible temporalmente.',
@@ -82,7 +85,7 @@ class ClienteRestCountries
     }
 
     /**
-     * Consulta REST Countries v5 (requiere API key) y valida la respuesta.
+     * Consulta REST Countries v5 y valida la respuesta paginada.
      *
      * @return Collection<int, DatosPais>
      */
@@ -129,7 +132,7 @@ class ClienteRestCountries
 
                 if (! is_array($cuerpo) || data_get($cuerpo, 'success') === false) {
                     throw new ExcepcionServicioPaises(
-                        'La API de países devolvió una respuesta inválida o deprecada.',
+                        'La API de países devolvió una respuesta inválida.',
                         502,
                     );
                 }
@@ -147,7 +150,7 @@ class ClienteRestCountries
 
                 $paises = $paises->merge(
                     collect($objetos)
-                        ->map(fn ($item) => $this->mapearPaisV5($item))
+                        ->map(fn ($item) => $this->mapearPais($item))
                         ->filter()
                 );
 
@@ -175,7 +178,7 @@ class ClienteRestCountries
     /**
      * Mapea un ítem v5 de REST Countries a DatosPais.
      */
-    private function mapearPaisV5(mixed $item): ?DatosPais
+    private function mapearPais(mixed $item): ?DatosPais
     {
         if (! is_array($item)) {
             return null;
@@ -200,78 +203,5 @@ class ClienteRestCountries
             region: $region,
             urlBandera: is_string($bandera) ? $bandera : null,
         );
-    }
-
-    /**
-     * Carga países desde el archivo local de respaldo (ISO 3166).
-     *
-     * @return Collection<int, DatosPais>
-     */
-    private function obtenerDesdeArchivoRespaldo(): Collection
-    {
-        $ruta = resource_path('data/paises-respaldo.json');
-
-        if (! is_readable($ruta)) {
-            return $this->obtenerFallbackMinimo();
-        }
-
-        $contenido = file_get_contents($ruta);
-        $datos = json_decode($contenido ?: '[]', true);
-
-        if (! is_array($datos)) {
-            return $this->obtenerFallbackMinimo();
-        }
-
-        return $this->desdeArreglos($datos);
-    }
-
-    /**
-     * @param  array<int, array{nombre?: string, codigo_iso?: string, region?: string, url_bandera?: string|null}>  $items
-     * @return Collection<int, DatosPais>
-     */
-    private function desdeArreglos(array $items): Collection
-    {
-        return collect($items)
-            ->map(function (array $item): ?DatosPais {
-                $nombre = $item['nombre'] ?? null;
-                $codigoIso = $item['codigo_iso'] ?? null;
-                $regionCruda = $item['region'] ?? null;
-                $bandera = $item['url_bandera'] ?? null;
-
-                if (! is_string($nombre) || $nombre === '' || ! is_string($codigoIso) || strlen($codigoIso) !== 2) {
-                    return null;
-                }
-
-                $region = $this->recargoPorRegion->normalizarRegion(
-                    is_string($regionCruda) ? $regionCruda : null
-                ) ?? 'Desconocida';
-
-                return new DatosPais(
-                    nombre: $nombre,
-                    codigoIso: strtoupper($codigoIso),
-                    region: $region,
-                    urlBandera: is_string($bandera) ? $bandera : null,
-                );
-            })
-            ->filter()
-            ->sortBy(fn (DatosPais $pais) => $pais->nombre)
-            ->values();
-    }
-
-    /**
-     * Lista mínima si también falla el archivo local.
-     *
-     * @return Collection<int, DatosPais>
-     */
-    private function obtenerFallbackMinimo(): Collection
-    {
-        return collect([
-            new DatosPais('Ecuador', 'EC', 'South America'),
-            new DatosPais('Spain', 'ES', 'Europe'),
-            new DatosPais('United States', 'US', 'North America'),
-            new DatosPais('Japan', 'JP', 'Asia'),
-            new DatosPais('South Africa', 'ZA', 'Africa'),
-            new DatosPais('Australia', 'AU', 'Oceania'),
-        ]);
     }
 }

@@ -23,6 +23,10 @@ services:
       QUEUE_CONNECTION: sync
       LOG_CHANNEL: stderr
       EJECUTAR_MIGRACIONES: "true"
+      REST_COUNTRIES_URL: ${REST_COUNTRIES_URL:-https://api.restcountries.com/countries/v5}
+      REST_COUNTRIES_API_KEY: ${REST_COUNTRIES_API_KEY}
+      REST_COUNTRIES_TIMEOUT: ${REST_COUNTRIES_TIMEOUT:-10}
+      REST_COUNTRIES_CACHE: ${REST_COUNTRIES_CACHE:-86400}
     depends_on:
       mysql:
         condition: service_healthy

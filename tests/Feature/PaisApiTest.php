@@ -32,10 +32,10 @@ it('lista países desde la API externa v5', function () {
         ->assertJsonPath('data.0.region', 'Europe');
 });
 
-it('usa respaldo local cuando la API externa falla', function () {
+it('responde error cuando la API externa falla', function () {
     config([
         'seguro.paises.api_key' => 'test-key',
-        'seguro.paises.clave_cache' => 'paises.test.fallback',
+        'seguro.paises.clave_cache' => 'paises.test.error',
     ]);
 
     Http::fake([
@@ -45,12 +45,11 @@ it('usa respaldo local cuando la API externa falla', function () {
     Cache::flush();
 
     $this->getJson('/api/paises')
-        ->assertOk()
-        ->assertJsonStructure(['data' => [['nombre', 'codigo_iso', 'region']]])
-        ->assertJsonCount(249, 'data');
+        ->assertStatus(502)
+        ->assertJsonPath('data', []);
 });
 
-it('usa respaldo local sin API key configurada', function () {
+it('responde error sin API key configurada', function () {
     config([
         'seguro.paises.api_key' => '',
         'seguro.paises.clave_cache' => 'paises.test.sin-key',
@@ -59,6 +58,6 @@ it('usa respaldo local sin API key configurada', function () {
     Cache::flush();
 
     $this->getJson('/api/paises')
-        ->assertOk()
-        ->assertJsonPath('data.0.codigo_iso', 'AF');
+        ->assertStatus(503)
+        ->assertJsonPath('mensaje', 'REST Countries v5 requiere REST_COUNTRIES_API_KEY.');
 });
