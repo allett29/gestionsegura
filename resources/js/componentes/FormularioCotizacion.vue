@@ -46,22 +46,30 @@
 
         <h2>Datos del viaje</h2>
         <div class="rejilla-formulario">
-            <div class="campo completo">
+            <div class="campo completo selector-pais">
                 <label for="codigo_iso_destino">País de destino</label>
-                <select
-                    id="codigo_iso_destino"
-                    v-model="formulario.codigo_iso_destino"
-                    required
-                >
-                    <option value="">Seleccione un país</option>
-                    <option
-                        v-for="pais in paises"
-                        :key="pais.codigo_iso"
-                        :value="pais.codigo_iso"
+                <div class="selector-pais-controles">
+                    <img
+                        v-if="paisSeleccionado?.url_bandera"
+                        :src="paisSeleccionado.url_bandera"
+                        :alt="`Bandera de ${paisSeleccionado.nombre}`"
+                        class="bandera-pais"
                     >
-                        {{ pais.nombre }} ({{ pais.region }})
-                    </option>
-                </select>
+                    <select
+                        id="codigo_iso_destino"
+                        v-model="formulario.codigo_iso_destino"
+                        required
+                    >
+                        <option value="">Seleccione un país</option>
+                        <option
+                            v-for="pais in paises"
+                            :key="pais.codigo_iso"
+                            :value="pais.codigo_iso"
+                        >
+                            {{ etiquetaPais(pais) }}
+                        </option>
+                    </select>
+                </div>
                 <span v-if="errores.codigo_iso_destino" class="error">{{ errores.codigo_iso_destino }}</span>
             </div>
 
@@ -134,6 +142,25 @@ const fechaMaximaNacimiento = computed(() => {
     fecha.setFullYear(fecha.getFullYear() - 18);
     return fecha.toISOString().slice(0, 10);
 });
+
+const paisSeleccionado = computed(() =>
+    props.paises.find((pais) => pais.codigo_iso === formulario.codigo_iso_destino) ?? null
+);
+
+function emojiBandera(codigoIso) {
+    if (!codigoIso || codigoIso.length !== 2) {
+        return '';
+    }
+
+    return [...codigoIso.toUpperCase()]
+        .map((letra) => String.fromCodePoint(127397 + letra.charCodeAt(0)))
+        .join('');
+}
+
+function etiquetaPais(pais) {
+    const emoji = emojiBandera(pais.codigo_iso);
+    return emoji ? `${emoji} ${pais.nombre} (${pais.region})` : `${pais.nombre} (${pais.region})`;
+}
 
 function limpiarErrores() {
     Object.keys(errores).forEach((clave) => {

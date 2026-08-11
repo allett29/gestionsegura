@@ -142,6 +142,25 @@ a {
     font-size: 0.85rem;
 }
 
+.selector-pais-controles {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.bandera-pais {
+    width: 2rem;
+    height: 1.35rem;
+    object-fit: cover;
+    border: 1px solid var(--color-borde);
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.selector-pais-controles select {
+    flex: 1;
+}
+
 .acciones {
     display: flex;
     flex-wrap: wrap;

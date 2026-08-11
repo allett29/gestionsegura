@@ -1,6 +1,6 @@
 # Sistema de Cotización y Venta de Seguro de Viaje
 
-Aplicación web desarrollada como prueba técnica. Permite cotizar un seguro de viaje, descargar la cotización en PDF, confirmar la contratación y consultar el historial de cotizaciones.
+Aplicación web para cotizar un seguro de viaje, descargar la cotización en PDF, confirmar la contratación y consultar el historial de cotizaciones.
 
 **Demostración:** https://gestionsegura.onrender.com
 
@@ -91,6 +91,7 @@ Petición HTTP
 - Autenticación mediante `REST_COUNTRIES_API_KEY`
 - Paginación, caché, timeout y tratamiento de errores de red o respuestas inválidas
 - Uso de `subregion` cuando existe, para distinguir regiones dentro de América
+- Bandera del país en el selector de destino (URL desde la API)
 
 ### Regla de cálculo
 
