@@ -24,7 +24,7 @@ php artisan config:clear || true
 php artisan storage:link || true
 
 if [ "${EJECUTAR_MIGRACIONES:-true}" = "true" ]; then
-  php artisan migrate --force || true
+  php artisan migrate --force
 fi
 
 exec "$@"

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 
 /**
- * La SPA Vue se sirve desde una única vista Blade.
+ * Rutas SPA de Vue (sin catch-all global para no interferir con /api ni /build).
  */
-Route::view('/{any?}', 'aplicacion')->where('any', '.*');
+Route::view('/', 'aplicacion');
+Route::view('/cotizaciones', 'aplicacion');
+Route::view('/cotizaciones/{uuid}', 'aplicacion')->whereUuid('uuid');
