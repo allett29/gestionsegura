@@ -200,28 +200,16 @@ php vendor/bin/pest
 
 ## Docker Hub
 
-Workflow listo en `.github/workflows/docker-publicar.yml`.
-
-### Pasos manuales (tú debes hacerlos)
-
-1. Crea cuenta en [Docker Hub](https://hub.docker.com/).
-2. En GitHub → Settings → Secrets and variables → Actions, crea:
-   - `DOCKERHUB_USERNAME`
-   - `DOCKERHUB_TOKEN` (Access Token de Docker Hub)
-3. Publica un tag:
+Imagen publicada:
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+docker pull allett29/gestionsegura:latest
+# o
+docker pull allett29/gestionsegura:v1.0.0
 ```
 
-4. O ejecuta el workflow manualmente (**workflow_dispatch**).
-
-Pull de ejemplo:
-
-```bash
-docker pull TU_USUARIO/seguro-viaje:latest
-```
+Workflow de publicación automática: `.github/workflows/docker-publicar.yml`  
+Secrets requeridos en GitHub Actions: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`.
 
 ---
 

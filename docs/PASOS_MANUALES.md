@@ -26,43 +26,48 @@ docker compose exec app php artisan db:seed --force
 
 ---
 
-## 2) Crear repositorio en GitHub y subir el código
+## 2) GitHub (estado actual)
 
-1. Entra a GitHub → **New repository**
-2. Nombre sugerido: `seguro-viaje` (o el que prefieras)
-3. **NO** marques README (ya existe en el proyecto)
-4. Crea el repo y luego en PowerShell (desde la carpeta del proyecto):
+Repo ya publicado: https://github.com/allett29/gestionsegura
+
+Pendiente manual:
+
+1. Comparte el repo con: **vrubio@gestionsegura.com.ec**
+   - Settings → Collaborators → Add people → invita ese correo
+2. Para subir los workflows de GitHub Actions, crea un Personal Access Token (classic) con scopes:
+   - `repo`
+   - `workflow`
+3. Luego:
 
 ```powershell
 cd C:\Users\DETPC\Desktop\Gestion_Segura
-git init
-git add .
-git commit -m "feat: sistema completo de cotizacion y venta de seguro de viaje"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/TU_REPO.git
-git push -u origin main
+git add .github/workflows
+git commit -m "ci: restaurar workflows de pruebas y Docker Hub"
+git push
 ```
-
-5. Comparte el repo con: **vrubio@gestionsegura.com.ec**
-   - Settings → Collaborators → Add people → invita ese correo
 
 ---
 
-## 3) Docker Hub (plus)
+## 3) Docker Hub (estado actual)
 
-1. Crea cuenta en https://hub.docker.com
-2. Crea un Access Token (Account Settings → Security)
-3. En GitHub del repo → Settings → Secrets and variables → Actions:
-   - `DOCKERHUB_USERNAME` = tu usuario
-   - `DOCKERHUB_TOKEN` = el token
-4. Publica imagen:
+Imagen ya publicada:
+
+- `allett29/gestionsegura:latest`
+- `allett29/gestionsegura:v1.0.0`
+
+Pendiente de seguridad (importante):
+
+1. **Revoca** el token que se compartió en el chat (Docker Hub → Account Settings → Security).
+2. Crea un token nuevo solo para CI.
+3. En GitHub → Settings → Secrets and variables → Actions:
+   - `DOCKERHUB_USERNAME` = `allett29`
+   - `DOCKERHUB_TOKEN` = el token nuevo (no el expuesto)
+
+Pull de prueba:
 
 ```powershell
-git tag v1.0.0
-git push origin v1.0.0
+docker pull allett29/gestionsegura:latest
 ```
-
-O corre el workflow **Publicar imagen Docker Hub** manualmente.
 
 ---
 
