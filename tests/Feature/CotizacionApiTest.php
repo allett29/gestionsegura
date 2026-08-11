@@ -2,24 +2,37 @@
 
 use App\Enumeraciones\EstadoCotizacion;
 use App\Modelos\Cotizacion;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
+    config([
+        'seguro.paises.api_key' => 'test-key',
+        'seguro.paises.clave_cache' => 'paises.test.cotizaciones',
+    ]);
+
+    Cache::flush();
+
     Http::fake([
-        'restcountries.com/*' => Http::response([
-            [
-                'name' => ['common' => 'Spain'],
-                'cca2' => 'ES',
-                'region' => 'Europe',
-                'subregion' => 'Southern Europe',
-                'flags' => ['svg' => 'https://example.com/es.svg'],
-            ],
-            [
-                'name' => ['common' => 'Ecuador'],
-                'cca2' => 'EC',
-                'region' => 'Americas',
-                'subregion' => 'South America',
-                'flags' => ['svg' => 'https://example.com/ec.svg'],
+        'api.restcountries.com/*' => Http::response([
+            'data' => [
+                'objects' => [
+                    [
+                        'names' => ['common' => 'Spain'],
+                        'codes' => ['alpha_2' => 'ES'],
+                        'region' => 'Europe',
+                        'subregion' => 'Southern Europe',
+                        'flag' => ['url_svg' => 'https://example.com/es.svg'],
+                    ],
+                    [
+                        'names' => ['common' => 'Ecuador'],
+                        'codes' => ['alpha_2' => 'EC'],
+                        'region' => 'Americas',
+                        'subregion' => 'South America',
+                        'flag' => ['url_svg' => 'https://example.com/ec.svg'],
+                    ],
+                ],
+                'meta' => ['total' => 2],
             ],
         ], 200),
     ]);
