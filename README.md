@@ -64,6 +64,12 @@ Variables de entorno: ver `.env.example`.
 
 Se adoptó un **monólito modular**: backend Laravel expone una API REST y el frontend Vue 3 funciona como SPA. La lógica de negocio no reside en controladores ni en componentes Vue.
 
+### Por qué esta arquitectura
+
+- **Monólito modular:** el alcance funcional es acotado (cotizar, contratar y consultar). Dividir en microservicios añadiría complejidad de despliegue y comunicación sin beneficio claro para este dominio.
+- **API REST + SPA Vue:** el backend concentra validaciones y reglas de negocio; el frontend se limita a captura de datos y presentación, lo que facilita pruebas y mantenimiento.
+- **Servicios de dominio:** el cálculo del seguro y la integración con REST Countries son reglas independientes de HTTP; aislarlas permite probarlas con PEST sin levantar toda la interfaz.
+
 ```text
 Petición HTTP
   → Form Request (validación)
