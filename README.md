@@ -1,158 +1,111 @@
 # Sistema de Cotización y Venta de Seguro de Viaje
 
-Aplicación web completa (Laravel + Vue.js + MySQL) para cotizar, descargar PDF, contratar y consultar seguros de viaje.
+Aplicación web desarrollada como prueba técnica. Permite cotizar un seguro de viaje, descargar la cotización en PDF, confirmar la contratación y consultar el historial de cotizaciones.
 
-> El enunciado original de la prueba técnica está en [`docs/ENUNCIADO.md`](docs/ENUNCIADO.md).  
-> La propuesta de arquitectura está en [`README_PROPUESTA.md`](README_PROPUESTA.md).  
-> Pasos manuales (GitHub, Docker Hub, Render): [`docs/PASOS_MANUALES.md`](docs/PASOS_MANUALES.md).
+**Demostración:** https://gestionsegura.onrender.com
 
----
-
-## Requisitos
-
-- PHP 8.4+
-- Composer
-- Node.js 20+
-- MySQL 8+
-- Docker (recomendado para entorno local y despliegue)
+**Tecnologías:** Laravel · Vue.js · MySQL · Git · PEST
 
 ---
 
-## Instalación local (sin Docker)
+## Funcionalidades implementadas
+
+- Formulario de cotización con validaciones en frontend y backend.
+- Listado de países desde REST Countries API (v5).
+- Cálculo del valor del seguro según días de viaje y región de destino.
+- Descarga de cotización en PDF.
+- Contratación con persistencia de datos y cambio de estado (`cotizado` → `contratado`).
+- Consulta de cotizaciones con búsqueda, filtro por estado y paginación.
+
+---
+
+## Instalación
+
+### Requisitos
+
+- PHP 8.4+, Composer, Node.js 20+, MySQL 8+
+- Docker y Docker Compose (opcional)
+
+### Con Docker Compose
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
-cd Gestion_Segura
+git clone https://github.com/allett29/gestionsegura.git
+cd gestionsegura
 
+cp .env.example .env
+php artisan key:generate
+
+docker compose up -d --build
+docker compose exec app php artisan db:seed --force
+```
+
+La aplicación queda disponible en http://localhost:8080
+
+### Sin Docker
+
+```bash
 composer install
 cp .env.example .env
 php artisan key:generate
 
-# Configura DB_* en .env apuntando a tu MySQL
+# Configurar DB_* y REST_COUNTRIES_API_KEY en .env
 php artisan migrate --seed
 
 npm install
 npm run build
-
 php artisan serve
 ```
 
-En otra terminal (desarrollo frontend con hot reload):
-
-```bash
-npm run dev
-```
-
-Abre `http://127.0.0.1:8000`.
-
----
-
-## Instalación con Docker Compose (recomendada)
-
-1. Copia el entorno y genera la clave:
-
-```bash
-cp .env.example .env
-```
-
-2. Genera `APP_KEY` (elige una opción):
-
-```bash
-# Opción A (si tienes PHP local)
-php artisan key:generate
-
-# Opción B (con Docker)
-docker run --rm php:8.4-cli php -r "echo 'base64:'.base64_encode(random_bytes(32)), PHP_EOL;"
-```
-
-Pega el valor en `APP_KEY` dentro de `.env`.
-
-3. Levanta los servicios:
-
-```bash
-docker compose up -d --build
-```
-
-4. (Opcional) Sembrar datos demo:
-
-```bash
-docker compose exec app php artisan db:seed --force
-```
-
-5. Abre `http://localhost:8080`.
-
----
-
-## Scripts útiles
-
-```bash
-# Pruebas automatizadas (PEST)
-php vendor/bin/pest
-
-# Build frontend
-npm run build
-
-# Migraciones
-php artisan migrate --seed
-```
+Variables de entorno: ver `.env.example`.
 
 ---
 
 ## Arquitectura
 
-Se implementó un **monólito modular**:
-
-- Controllers delgados (`app/Http/Controladores`)
-- Lógica de negocio en servicios (`app/Servicios`)
-- Validaciones en Form Requests (`app/Http/Peticiones`)
-- Modelos Eloquent (`app/Modelos`)
-- Enumeraciones y excepciones de dominio
-- Frontend Vue 3 SPA (`resources/js`)
-
-### Flujo
+Se adoptó un **monólito modular**: backend Laravel expone una API REST y el frontend Vue 3 funciona como SPA. La lógica de negocio no reside en controladores ni en componentes Vue.
 
 ```text
 Petición HTTP
-  → Petición (validación)
+  → Form Request (validación)
   → Controlador (orquestación)
   → Servicio (negocio)
   → Modelo / API externa / PDF
-  → Recurso JSON o vista
+  → Respuesta JSON o vista
 ```
 
-**No se usaron microservicios**: para este dominio aportan complejidad sin valor. La separación interna por servicios es la decisión senior adecuada.
+### Organización de la lógica de negocio
 
----
-
-## Organización de la lógica de negocio
-
-| Pieza | Responsabilidad |
+| Servicio | Responsabilidad |
 |---|---|
-| `ServicioCalculoCotizacion` | Días, tarifa base, recargo y total |
-| `RecargoPorRegion` | Mapeo región → porcentaje |
-| `ClienteRestCountries` | Integración con REST Countries v5 (timeout, caché, paginación) |
-| `ServicioCotizacion` | Crear / listar / consultar |
-| `ServicioContratarCotizacion` | Transición Cotizado → Contratado |
+| `ServicioCalculoCotizacion` | Días de viaje, tarifa base, recargo regional y total |
+| `RecargoPorRegion` | Normalización de región y porcentaje de recargo |
+| `ClienteRestCountries` | Consumo de REST Countries v5 |
+| `ServicioCotizacion` | Creación, consulta y listado de cotizaciones |
+| `ServicioContratarCotizacion` | Contratación y transición de estado |
 | `ServicioPdfCotizacion` | Generación del PDF |
 
-Regla de precio:
+### Integración con REST Countries
 
-- USD 3 por día
-- Recargo por región (South America 0%, North America 15%, Europe 20%, Asia 25%, Africa 20%, Oceania 25%)
-- Ejemplo España 10 días = USD 36
+- Endpoint de la aplicación: `GET /api/paises`
+- Fuente externa: REST Countries v5 (`https://api.restcountries.com/countries/v5`)
+- Autenticación mediante `REST_COUNTRIES_API_KEY`
+- Paginación, caché, timeout y tratamiento de errores de red o respuestas inválidas
+- Uso de `subregion` cuando existe, para distinguir regiones dentro de América
 
----
+### Regla de cálculo
 
-## Integración REST Countries
+- Tarifa base: USD 3 por día de viaje
+- Recargos por región: South America 0%, North America 15%, Europe 20%, Asia 25%, Africa 20%, Oceania 25%
+- Ejemplo: viaje de 10 días a España → USD 36
 
-- Endpoint: `GET /api/paises`
-- Fuente: REST Countries **v5** — `https://api.restcountries.com/countries/v5`
-- Requiere variable de entorno `REST_COUNTRIES_API_KEY` (registro en https://restcountries.com/sign-up)
-- Paginación automática (100 países por página)
-- Se usa `subregion` (cuando existe) para distinguir South/North America
-- Timeout configurable
-- Caché (24h por defecto)
-- Errores registrados en log sin datos sensibles
+### Decisiones técnicas
+
+- Servicios de dominio separados de la capa HTTP.
+- UUID como identificador público en rutas y API.
+- Estados modelados con Enum de PHP.
+- Parámetros de negocio en `config/seguro.php`.
+- Migraciones Laravel para el esquema de base de datos.
+- Respuestas JSON con estructura uniforme (`mensaje`, `data`, `meta`).
 
 ---
 
@@ -160,114 +113,62 @@ Regla de precio:
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/paises` | Lista de países |
+| GET | `/api/paises` | Países disponibles |
 | POST | `/api/cotizaciones` | Crear cotización |
-| GET | `/api/cotizaciones` | Listado paginado (`buscar`, `estado`, `por_pagina`) |
+| GET | `/api/cotizaciones` | Listado paginado |
 | GET | `/api/cotizaciones/{uuid}` | Detalle |
 | POST | `/api/cotizaciones/{uuid}/contratar` | Contratar |
-| GET | `/api/cotizaciones/{uuid}/pdf` | Descargar PDF |
+| GET | `/api/cotizaciones/{uuid}/pdf` | PDF de la cotización |
 
 ---
 
 ## Frontend
 
-- Vue 3 + Vue Router + Axios
-- Pantallas:
-  - `/` cotizar
-  - `/cotizaciones` listado con búsqueda/filtro/paginación
-  - `/cotizaciones/:uuid` detalle, PDF y contratar
-- Responsive (escritorio y móvil)
-- Validaciones en cliente + servidor
+| Ruta | Pantalla |
+|---|---|
+| `/` | Cotización |
+| `/cotizaciones` | Listado de cotizaciones |
+| `/cotizaciones/:uuid` | Detalle, PDF y contratación |
+
+Vue 3, Vue Router y Axios. Interfaz responsive.
 
 ---
 
-## Pruebas (PEST)
-
-Cobertura incluida:
-
-- Cálculo unitario (incluye caso España = 36)
-- Crear cotización
-- Validaciones 422
-- Contratar + conflicto 409
-- Listado paginado
-- PDF
-- Países (éxito y error controlado)
+## Pruebas automatizadas
 
 ```bash
 php vendor/bin/pest
 ```
 
----
+Cobertura principal:
 
-## Docker Hub
-
-Imagen publicada:
-
-```bash
-docker pull allett29/gestionsegura:latest
-# o
-docker pull allett29/gestionsegura:v1.0.0
-```
-
-Workflow de publicación automática: `.github/workflows/docker-publicar.yml`  
-Secrets requeridos en GitHub Actions: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`.
+- Cálculo de cotización (incluye caso España = USD 36)
+- Creación y validaciones de cotizaciones
+- Contratación y conflictos de estado
+- Listado paginado y PDF
+- Integración de países
 
 ---
 
-## Despliegue en Render
+## Mejoras futuras
 
-Guía detallada: [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md).
+De evolucionar a un sistema productivo, se consideraría:
 
-Resumen:
-
-1. Crear MySQL en Render.
-2. Crear Web Service con Dockerfile.
-3. Configurar variables (`APP_KEY`, `DB_*`, `APP_URL`, etc.).
-4. Desplegar y verificar.
-
----
-
-## Decisiones técnicas relevantes
-
-- Código de dominio, migraciones, carpetas propias, funciones y comentarios en **español**
-- UUID público en rutas (no exponer IDs internos)
-- Estados tipados con Enum (`cotizado`, `contratado`)
-- Configuración de negocio en `config/seguro.php`
-- JSON uniforme (`mensaje`, `data`, `meta`)
-- CI con GitHub Actions para PEST
+- Autenticación de usuarios y panel administrativo
+- Pasarela de pagos
+- Procesamiento asíncrono de PDF y correos
+- Rate limiting, auditoría y monitoreo
+- Almacenamiento de documentos en servicio dedicado
 
 ---
 
-## Mejoras futuras (producción)
-
-- Autenticación y roles
-- Pasarela de pagos real
-- Colas para PDF/email
-- Rate limiting
-- Observabilidad avanzada
-- Disco persistente / object storage para archivos
-- Extracción a servicios solo si el dominio lo exige de verdad
-
----
-
-## Estructura principal
+## Estructura del repositorio
 
 ```text
-app/
-  Enumeraciones/
-  Excepciones/
-  Http/Controladores|Peticiones|Recursos/
-  Modelos/
-  Servicios/
-  Soporte/
-resources/js/
-  componentes/
-  composables/
-  paginas/
-  enrutador/
-  servicios/
-database/migrations|factories|seeders/
-tests/Feature|Unit/
-docker/
-docs/
+app/Servicios/          Lógica de negocio
+app/Http/               Controladores, peticiones y recursos
+app/Modelos/            Modelos Eloquent
+resources/js/           Frontend Vue 3
+database/migrations/    Esquema de base de datos
+tests/                  Pruebas PEST
 ```
