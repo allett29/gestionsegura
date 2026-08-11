@@ -1,0 +1,51 @@
+services:
+  app:
+    build: .
+    container_name: seguro_viaje_app
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      APP_NAME: "Seguro de Viaje"
+      APP_ENV: local
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:${APP_PORT:-8080}
+      APP_LOCALE: es
+      APP_FALLBACK_LOCALE: es
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: seguro_viaje
+      DB_USERNAME: seguro
+      DB_PASSWORD: secreto
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+      EJECUTAR_MIGRACIONES: "true"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./storage:/var/www/html/storage
+
+  mysql:
+    image: mysql:8.4
+    container_name: seguro_viaje_mysql
+    environment:
+      MYSQL_DATABASE: seguro_viaje
+      MYSQL_USER: seguro
+      MYSQL_PASSWORD: secreto
+      MYSQL_ROOT_PASSWORD: rootsecreto
+    ports:
+      - "${DB_PORT_HOST:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-prootsecreto"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql_data:
