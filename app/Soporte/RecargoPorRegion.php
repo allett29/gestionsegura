@@ -34,8 +34,10 @@ class RecargoPorRegion
         $mapa = [
             'south america' => 'South America',
             'north america' => 'North America',
+            'northern america' => 'North America',
             'central america' => 'North America',
             'caribbean' => 'North America',
+            'latin america and the caribbean' => 'North America',
             'europe' => 'Europe',
             'asia' => 'Asia',
             'africa' => 'Africa',

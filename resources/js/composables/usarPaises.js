@@ -16,6 +16,10 @@ export function usarPaises() {
         try {
             const { data } = await api.get('/paises');
             paises.value = data.data ?? [];
+
+            if (paises.value.length === 0) {
+                error.value = data.mensaje || 'No se pudieron cargar los países.';
+            }
         } catch (e) {
             error.value = e.response?.data?.mensaje || 'No se pudieron cargar los países.';
             paises.value = [];

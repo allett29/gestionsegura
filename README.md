@@ -146,11 +146,11 @@ Regla de precio:
 ## Integración REST Countries
 
 - Endpoint: `GET /api/paises`
-- Fuente: `https://restcountries.com/`
+- Fuente en vivo: REST Countries **v5** (`https://api.restcountries.com/countries/v5`) con `REST_COUNTRIES_API_KEY`
+- Sin API key (o si la API falla): respaldo local ISO 3166 en `resources/data/paises-respaldo.json` (~249 países)
 - Se usa `subregion` (cuando existe) para distinguir South/North America
 - Timeout configurable
 - Caché (24h por defecto)
-- Fallback local si el servicio cae y no hay caché
 - Errores registrados en log sin datos sensibles
 
 ---

@@ -47,10 +47,12 @@ return [
     |--------------------------------------------------------------------------
     */
     'paises' => [
-        'url' => env('REST_COUNTRIES_URL', 'https://restcountries.com/v3.1/all'),
-        'campos' => 'name,cca2,region,subregion,flags',
+        'url' => env('REST_COUNTRIES_URL', 'https://api.restcountries.com/countries/v5'),
+        'api_key' => env('REST_COUNTRIES_API_KEY', ''),
+        'campos' => 'names.common,codes.alpha_2,region,subregion,flag.url_svg',
+        'limite_pagina' => (int) env('REST_COUNTRIES_PAGE_LIMIT', 100),
         'timeout_segundos' => (int) env('REST_COUNTRIES_TIMEOUT', 5),
         'cache_segundos' => (int) env('REST_COUNTRIES_CACHE', 86400),
-        'clave_cache' => 'paises.todos',
+        'clave_cache' => 'paises.todos.v2',
     ],
 ];
